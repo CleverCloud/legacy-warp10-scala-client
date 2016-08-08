@@ -59,8 +59,13 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
  )
  def sendData(datas:Set[Warp10Data]) = {
    val r = requestTemplate.withBody(datas.map(_.warp10Serialize).mkString("\n"))
-   
+
  }
+/*
+ def sendData(data:Warp10Data) = {
+   sendData(Set(data))
+ }
+ */
 
 }
 
