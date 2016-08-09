@@ -70,8 +70,8 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
    res.get.map({
      case -\/(x) => -\/(x)
      case \/-(x) => {
-       println(x.status)
-       println(x.body)
+//       println(x.status)
+//       println(x.body)
        \/-(x)
      }
    }).start
