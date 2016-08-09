@@ -19,7 +19,7 @@ case class BooleanWarp10Value(value: Boolean) extends Warp10Value{
   def warp10Serialize = {value.toString()}
 }
 case class StringWarp10Value(value: String) extends Warp10Value{
-  def warp10Serialize = {value.toString()}
+  def warp10Serialize = {Warp10Data.urlEncode(value)}
 }
 
 case class Warp10GeoValue(lat:Double, lon:Double, elev:Option[Double]){
@@ -30,13 +30,13 @@ case class Warp10GeoValue(lat:Double, lon:Double, elev:Option[Double]){
 
 
 case class Warp10Data(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Warp10Value){
-  def urlEncode(s:String) = java.net.URLEncoder.encode(s, "utf-8")
   def warp10Serialize = {
-    dateTime.toString + "/" + geo.fold("/")(g => g.warp10Serialize) + " " + urlEncode(name) + "{" + labels.map(kv => urlEncode(kv._1) + "=" + urlEncode(kv._2)) + "} " + value.warp10Serialize
+    dateTime.toString + "/" + geo.fold("/")(g => g.warp10Serialize) + " " + Warp10Data.urlEncode(name) + "{" + labels.map(kv => Warp10Data.urlEncode(kv._1) + "=" + Warp10Data.urlEncode(kv._2)).mkString(",") + "} " + value.warp10Serialize
   }
 }
 
 object Warp10Data {
+  def urlEncode(s:String) = java.net.URLEncoder.encode(s, "utf-8")
   def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Int):Warp10Data = Warp10Data(dateTime, geo, name, labels, IntWarp10Value(value))
   def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Long):Warp10Data = Warp10Data(dateTime, geo, name, labels, LongWarp10Value(value))
   def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Boolean):Warp10Data = Warp10Data(dateTime, geo, name, labels, BooleanWarp10Value(value))
@@ -68,13 +68,27 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
    val r = requestTemplateForDataIngest.withBody(datas.map(_.warp10Serialize).mkString("\n"))
    val res = httpClient(r)
    res.get.map({
-     case -\/(x) => -\/(x)
+     case -\/(x) => {
+       println(x)
+       -\/(x)
+     }
      case \/-(x) => {
-//       println(x.status)
-//       println(x.body)
+       println(x.status)
+       println(x.bodyAsText.runLog)
        \/-(x)
      }
    }).start
+   .map({
+     case -\/(x) => {
+       println(x)
+       -\/(x)
+     }
+     case \/-(x) => {
+       println(x.status)
+       println(x.bodyAsText.runLog.run)
+       \/-(x)
+     }
+   })
  }
 
 
