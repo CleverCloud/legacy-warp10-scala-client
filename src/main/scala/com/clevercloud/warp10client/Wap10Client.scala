@@ -2,6 +2,9 @@ package com.clevercloud.warp10client
 import org.http4s.client.blaze._
 import org.http4s.{Request, Response, Method, Uri, Header, Headers}
 import java.net.URL
+import scalaz.concurrent.Future
+import scalaz._
+
 
 sealed abstract class Warp10Value {
   def warp10Serialize:String
@@ -45,33 +48,40 @@ case class PooledHttp1ClientConfiguration(maxTotalConnections:Option[Int], confi
 class Warp10Client(apiEndPoint:Uri, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None){
 
 val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
-/*
-def this(apiEndPoint:String, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None) = this(Uri.fromString(apiEndPoint)., token, pooledHttp1ClientConfiguration)
-*/
+
  val httpClient = PooledHttp1Client(
    maxTotalConnections = pooledHttp1ClientConfiguration.fold(defaultMaxTotalConnections4pooledHttp1ClientConfiguration)(_.maxTotalConnections.getOrElse(defaultMaxTotalConnections4pooledHttp1ClientConfiguration)),
    config = pooledHttp1ClientConfiguration.fold(BlazeClientConfig.defaultConfig)(_.config.getOrElse(BlazeClientConfig.defaultConfig))
  )
- val requestTemplate = Request(
+
+ val requestTemplateForDataIngest = Request(
    method = Method.POST,
-   uri = apiEndPoint,
+   uri = apiEndPoint / "api/v0/update",
    headers = Headers(
      Header("Host", apiEndPoint.host.fold("localhost")(_.renderString)),
      Header("X-Warp10-Token", token),
      Header("Content-Type", "test/plain")
    )
  )
- def sendData(datas:Set[Warp10Data]) = {
-   val r = requestTemplate.withBody(datas.map(_.warp10Serialize).mkString("\n"))
+
+ def sendData(datas:Set[Warp10Data]):Future[Throwable \/ Response] = {
+   val r = requestTemplateForDataIngest.withBody(datas.map(_.warp10Serialize).mkString("\n"))
    val res = httpClient(r)
-   val status = res.run.status
-   println(status)
+   res.get.map({
+     case -\/(x) => -\/(x)
+     case \/-(x) => {
+       println(x.status)
+       println(x.body)
+       \/-(x)
+     }
+   }).start
  }
-/*
- def sendData(data:Warp10Data) = {
+
+
+ def sendData(data:Warp10Data):Future[Throwable \/ Response] = {
    sendData(Set(data))
  }
- */
+
 
 }
 
