@@ -43,7 +43,11 @@ object Warp10Data {
 case class PooledHttp1ClientConfiguration(maxTotalConnections:Option[Int], config: Option[BlazeClientConfig])
 
 class Warp10Client(apiEndPoint:Uri, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None){
+
 val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
+/*
+def this(apiEndPoint:String, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None) = this(Uri.fromString(apiEndPoint)., token, pooledHttp1ClientConfiguration)
+*/
  val httpClient = PooledHttp1Client(
    maxTotalConnections = pooledHttp1ClientConfiguration.fold(defaultMaxTotalConnections4pooledHttp1ClientConfiguration)(_.maxTotalConnections.getOrElse(defaultMaxTotalConnections4pooledHttp1ClientConfiguration)),
    config = pooledHttp1ClientConfiguration.fold(BlazeClientConfig.defaultConfig)(_.config.getOrElse(BlazeClientConfig.defaultConfig))
@@ -59,7 +63,9 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
  )
  def sendData(datas:Set[Warp10Data]) = {
    val r = requestTemplate.withBody(datas.map(_.warp10Serialize).mkString("\n"))
-
+   val res = httpClient(r)
+   val status = res.run.status
+   println(status)
  }
 /*
  def sendData(data:Warp10Data) = {
