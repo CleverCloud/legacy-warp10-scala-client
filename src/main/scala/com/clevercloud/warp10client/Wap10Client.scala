@@ -34,7 +34,7 @@ case class Warp10GeoValue(lat:Double, lon:Double, elev:Option[Double]){
 
 case class Warp10Data(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Warp10Value){
   def warp10Serialize = {
-    dateTime.toString + "/" + geo.fold("/")(g => g.warp10Serialize) + " " + Warp10Data.urlEncode(name) + "{" + labels.map(kv => Warp10Data.urlEncode(kv._1) + "=" + Warp10Data.urlEncode(kv._2)).mkString(",<") + "} " + value.warp10Serialize
+    dateTime.toString + "/" + geo.fold("/")(g => g.warp10Serialize) + " " + Warp10Data.urlEncode(name) + "{" + labels.map(kv => Warp10Data.urlEncode(kv._1) + "=" + Warp10Data.urlEncode(kv._2)).mkString(",") + "} " + value.warp10Serialize
   }
 }
 
