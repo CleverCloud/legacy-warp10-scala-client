@@ -6,6 +6,10 @@ It based on the [http4s](http://http4s.org/) client, and the Pooled HTTP client,
 
 This client is able to send data to the warp10 DB ATM. It's the main purpose and usage for the time being, on my side there is no active work on fetching data, PR welcome.
 
+# CI is on travis
+
+master: [![Build Status](https://travis-ci.org/CleverCloud/wapr10-scala-client.svg?branch=master)](https://travis-ci.org/CleverCloud/wapr10-scala-client)
+
 # Add it to your code
 
 NNNNNNEEEEEDDDD
