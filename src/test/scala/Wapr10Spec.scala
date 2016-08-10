@@ -17,6 +17,7 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
     status 200 sending multiple Int data on the warp10 DB         $e3
 
     status 200 sending Long data on the warp10 DB                 $eLong
+    status 200 sending Double data on the warp10 DB            $eDouble
     status 200 sending Boolean data on the warp10 DB              $eBoolean
     status 200 sending String data on the warp10 DB               $eString
 
@@ -43,8 +44,11 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
   ))
   def e3 = getStatusCode(valid_multiple_Send_f) must be_\/-(200)
 
-  val eLong_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.long", Set("label1" -> "dsfF3", "label2" -> "dsfg"), 5678957.toLong))
+  val eLong_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.long", Set("label1" -> "dsfF3", "label2" -> "dsfg"), (56).toLong))
   def eLong = getStatusCode(eLong_f) must be_\/-(200)
+
+  val eDouble_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.long", Set("label1" -> "dsfF3", "label2" -> "dsfg"), 56.8957))
+  def eDouble = getStatusCode(eDouble_f) must be_\/-(200)
 
   val eBoolean_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.boolean", Set("label1" -> "dsfF3", "label2" -> "dsfg"), true))
   def eBoolean = getStatusCode(eBoolean_f) must be_\/-(200)

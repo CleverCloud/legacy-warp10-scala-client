@@ -15,6 +15,9 @@ case class IntWarp10Value(value: Int) extends Warp10Value{
 case class LongWarp10Value(value: Long) extends Warp10Value{
   def warp10Serialize = {value.toString()}
 }
+case class DoubleWarp10Value(value: Double) extends Warp10Value{
+  def warp10Serialize = {value.toString()}
+}
 case class BooleanWarp10Value(value: Boolean) extends Warp10Value{
   def warp10Serialize = {value.toString()}
 }
@@ -39,6 +42,7 @@ object Warp10Data {
   def urlEncode(s:String) = java.net.URLEncoder.encode(s, "utf-8")
   def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Int):Warp10Data = Warp10Data(dateTime, geo, name, labels, IntWarp10Value(value))
   def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Long):Warp10Data = Warp10Data(dateTime, geo, name, labels, LongWarp10Value(value))
+  def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Double):Warp10Data = Warp10Data(dateTime, geo, name, labels, DoubleWarp10Value(value))
   def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Boolean):Warp10Data = Warp10Data(dateTime, geo, name, labels, BooleanWarp10Value(value))
   def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:String):Warp10Data = Warp10Data(dateTime, geo, name, labels, StringWarp10Value(value))
 }
