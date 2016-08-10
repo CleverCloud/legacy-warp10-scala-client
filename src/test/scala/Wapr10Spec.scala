@@ -25,14 +25,14 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
                                                                  """
 
   val time = System.currentTimeMillis()
-
+  
   val failedw10client = new Warp10Client(Uri.uri("http://localhost:8080/"), "invalid_token")
 
   val failedSend_f = failedw10client.sendData(Set(Warp10Data(time, None, "org.test.plain", Set("label1" -> "dsfF3", "label2" -> "dsfg"), 7)))
   def e2 = getStatusCode(failedSend_f) must be_-\/(beAnInstanceOf[Warp10Error])
 
 
-  val w10client = new Warp10Client(Uri.uri("http://localhost:8080/"), "fDdY9M_vl8ex14yz7DDVA9bPvfrDbVvUGn_jzPQbJdK0MMuEWArnyNIzwtuRmJbDmT9ogKlK2rs08cD6SguzsfK2dU2Z6ZohXf1JlcwTLlX8hJQDwqQGJwHu8IWvGPmN")
+  val w10client = new Warp10Client(Uri.uri("http://localhost:8080/"), "WRITE")
 
   val validSend_f = w10client.sendData(Warp10Data(time, None, "org.test.plain", Set("label1" -> "dsfF3", "label2" -> "dsfg"), 7))
   def e1 = getStatusCode(validSend_f) must be_\/-(200)
@@ -55,7 +55,7 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
 
   val eString_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "datastringtest"))
   def eString = getStatusCode(eString_f) must be_\/-(200)
-  
+
   def getStatusCode(f:Future[Warp10Error \/ Response]) = {
     f.unsafePerformSync match {
       case \/-(r) => \/-(r.status.code)
