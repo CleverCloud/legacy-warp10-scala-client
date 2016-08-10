@@ -94,6 +94,11 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
  }
 
 
+ def closeNow = {
+   httpClient.shutdownNow()
+ }
+
+
 }
 
 object Warp10Client {
