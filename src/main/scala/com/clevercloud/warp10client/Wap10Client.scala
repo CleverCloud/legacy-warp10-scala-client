@@ -31,7 +31,7 @@ case class Warp10GeoValue(lat:Double, lon:Double, elev:Option[Double]){
 
 case class Warp10Data(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Warp10Value){
   def warp10Serialize = {
-    dateTime.toString + "/" + geo.fold("/")(g => g.warp10Serialize) + " " + Warp10Data.urlEncode(name) + "{" + labels.map(kv => Warp10Data.urlEncode(kv._1) + "=" + Warp10Data.urlEncode(kv._2)).mkString(",") + "} " + value.warp10Serialize
+    dateTime.toString + "/" + geo.fold("/")(g => g.warp10Serialize) + " " + Warp10Data.urlEncode(name) + "{" + labels.map(kv => Warp10Data.urlEncode(kv._1) + "=" + Warp10Data.urlEncode(kv._2)).mkString(",<") + "} " + value.warp10Serialize
   }
 }
 
@@ -44,6 +44,8 @@ object Warp10Data {
 }
 
 case class PooledHttp1ClientConfiguration(maxTotalConnections:Option[Int], config: Option[BlazeClientConfig])
+
+case class Warp10Error(message:String)
 
 class Warp10Client(apiEndPoint:Uri, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None){
 
@@ -64,35 +66,26 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
    )
  )
 
- def sendData(datas:Set[Warp10Data]):Future[Throwable \/ Response] = {
+ def sendData(datas:Set[Warp10Data]):Future[Warp10Error \/ Response] = {
    val r = requestTemplateForDataIngest.withBody(datas.map(_.warp10Serialize).mkString("\n"))
    val res = httpClient(r)
    res.get.map({
      case -\/(x) => {
-       println(x)
-       -\/(x)
+         -\/(Warp10Error(x.getMessage()))
      }
      case \/-(x) => {
-       println(x.status)
-       println(x.bodyAsText.runLog)
-       \/-(x)
+       if(x.status.code == 200){
+         \/-(x)
+       }else{
+         // x.bodyAsText.runLog.run
+         -\/(Warp10Error(x.status.toString()))
+       }
      }
    }).start
-   .map({
-     case -\/(x) => {
-       println(x)
-       -\/(x)
-     }
-     case \/-(x) => {
-       println(x.status)
-       println(x.bodyAsText.runLog.run)
-       \/-(x)
-     }
-   })
  }
 
 
- def sendData(data:Warp10Data):Future[Throwable \/ Response] = {
+ def sendData(data:Warp10Data):Future[Warp10Error \/ Response] = {
    sendData(Set(data))
  }
 
