@@ -13,6 +13,8 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-blaze-client" % http4sVersion
 )
 
+bintrayOrganization := Some("clevercloud")
+
 
 // Uncomment to use Akka
 //libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.11"

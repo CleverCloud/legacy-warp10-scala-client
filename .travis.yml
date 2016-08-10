@@ -1,0 +1,14 @@
+sudo: required
+
+language: scala
+
+services:
+  - docker
+
+before_install:
+  - docker pull waxzce/warp10forci:latest
+  - docker run -p 8080:8080 -p 8081:8081 -d -i waxzce/warp10forci:latest
+  - docker ps -a
+
+
+
