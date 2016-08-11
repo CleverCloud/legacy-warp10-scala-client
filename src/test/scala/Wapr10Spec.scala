@@ -24,6 +24,7 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
     status 200 sending special char String data on the warp10 DB    $eStringWithSpecial
     status 200 sending json String data on the warp10 DB            $eStringjson
 
+    status 200 sending special char in labels                       $eLongSpecialChar
 
                                                                   """
 
@@ -56,9 +57,9 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
   val eBoolean_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.boolean", Set("label1" -> "dsfF3", "label2" -> "dsfg"), true))
   def eBoolean = getStatusCode(eBoolean_f) must be_\/-(200)
 
+
   val eString_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "data string test"))
   def eString = getStatusCode(eString_f) must be_\/-(200)
-
 
   val eStringWithSpecial_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.stringspecial", Set("label1" -> "dsfF3", "label2" -> "dsfg"), """d4T4 ~ $trïng (t€§t)! -_ <> &@#  " ' \ / plop"""))
   def eStringWithSpecial = getStatusCode(eStringWithSpecial_f) must be_\/-(200)
@@ -67,6 +68,8 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
   def eStringjson = getStatusCode(eStringjson_f) must be_\/-(200)
 
 
+  val eLongSpecialChar_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.labels", Set("lab$€$*el1" -> "d sf (o)sfF3", "las bel2" -> "dsfg£$€é&#@vds"), (56893890).toLong))
+  def eLongSpecialChar = getStatusCode(eLongSpecialChar_f) must be_\/-(200)
 
   def getStatusCode(f:Future[Warp10Error \/ Response]) = {
     f.unsafePerformSync match {
