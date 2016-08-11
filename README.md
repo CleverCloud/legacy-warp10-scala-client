@@ -18,6 +18,9 @@ Add the resolver:
 
     resolvers += "Clever Cloud Bintray" at "https://dl.bintray.com/clevercloud/maven"
 
+You can add yourself to the watchers list on the Bintray repo to be notified of
+new versions: https://bintray.com/clevercloud/maven/warp10-scala-client
+
 # Code examples
 
 Look at the tests directory for functional tests and code examples
