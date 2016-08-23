@@ -1,4 +1,4 @@
-master: [![Build Status](https://travis-ci.org/CleverCloud/wapr10-scala-client.svg?branch=master)](https://travis-ci.org/CleverCloud/wapr10-scala-client)
+master: [![Build Status](https://travis-ci.org/CleverCloud/warp10-scala-client.svg?branch=master)](https://travis-ci.org/CleverCloud/warp10-scala-client)
 
 # This is a scala client for [Warp10 Geo/time series DB](http://www.warp10.io/)
 
