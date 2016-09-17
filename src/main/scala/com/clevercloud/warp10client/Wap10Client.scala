@@ -26,7 +26,7 @@ case class StringWarp10Value(value: String) extends Warp10Value{
   /* Do I have to urlEncode? Warp10Data.urlEncode(value) */
 }
 
-case class Warp10GeoValue(lat:Double, lon:Double, elev:Option[Double]){
+case class Warp10GeoValue(lat:Double, lon:Double, elev:Option[Long]){
   def warp10Serialize = {
     lat.toString() + ":" + lon.toString() + elev.fold("/")("/" + _.toString())
   }
