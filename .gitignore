@@ -8,3 +8,4 @@
 .ensime_cache/
 bin
 libexec/
+.DS_Store
