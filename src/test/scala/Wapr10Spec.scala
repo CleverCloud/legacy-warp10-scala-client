@@ -26,6 +26,12 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
 
     status 200 sending special char in labels                       $eLongSpecialChar
 
+
+    status 200 to test more request                                 $eStringMore1
+    status 200 to test more request                                 $eStringMore2
+    status 200 to test more request                                 $eStringMore3
+    status 200 to test more request                                 $eStringMore4
+
                                                                   """
 
   val time = System.currentTimeMillis()
@@ -71,11 +77,20 @@ class Warp10CLientSendSpec extends Specification with matcher.DisjunctionMatcher
   val eLongSpecialChar_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.labels", Set("lab$€$*el1" -> "d sf (o)sfF3", "las bel2" -> "dsfg£$€é&#@vds"), (56893890).toLong))
   def eLongSpecialChar = getStatusCode(eLongSpecialChar_f) must be_\/-(200)
 
-  def getStatusCode(f:Future[Warp10Error \/ Response]) = {
-    f.unsafePerformSync match {
-      case \/-(r) => \/-(r.status.code)
-      case -\/(x) => -\/(x)
-    }
-  }
+
+  val eStringMore1_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "data string test"))
+  def eStringMore1 = getStatusCode(eStringMore1_f) must be_\/-(200)
+  val eStringMore2_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "data string test"))
+  def eStringMore2 = getStatusCode(eStringMore2_f) must be_\/-(200)
+  val eStringMore3_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "data string test"))
+  def eStringMore3 = getStatusCode(eStringMore3_f) must be_\/-(200)
+  val eStringMore4_f = w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "data string test"))
+  def eStringMore4 = getStatusCode(eStringMore4_f) must be_\/-(200)
+
+  println(w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "data string test")).run + "  <<<<<") 
+
+  def getStatusCode(f:Task[Response]) = {
+    f.map(x => x.status.code)
+  }.unsafePerformSyncAttempt
 
 }

@@ -2,7 +2,7 @@ organization := """com.clevercloud"""
 
 name := """warp10-scala-client"""
 
-version := "1.0.1"
+version := "2.0.0"
 
 scalaVersion := "2.11.7"
 
@@ -15,5 +15,7 @@ libraryDependencies ++= Seq(
 )
 
 bintrayOrganization := Some("clevercloud")
+
+scalacOptions ++= Seq("-deprecation")
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))

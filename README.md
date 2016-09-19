@@ -24,4 +24,8 @@ new versions: https://bintray.com/clevercloud/maven/warp10-scala-client
 
 # Code examples
 
+    val w10client = new Warp10Client(Uri.uri("http://localhost:8080/"), "WRITE")
+    w10client.sendData(Warp10Data(time, None, "org.test.plain.string", Set("label1" -> "dsfF3", "label2" -> "dsfg"), "data string test")).run
+
+
 Look at the tests directory for functional tests and code examples

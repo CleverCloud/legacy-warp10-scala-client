@@ -2,7 +2,7 @@ package com.clevercloud.warp10client
 import org.http4s.client.blaze._
 import org.http4s.{Request, Response, Method, Uri, Header, Headers}
 import java.net.URL
-import scalaz.concurrent.Future
+import scalaz.concurrent.{Future, Task}
 import scalaz._
 
 
@@ -50,7 +50,7 @@ object Warp10Data {
 
 case class PooledHttp1ClientConfiguration(maxTotalConnections:Option[Int], config: Option[BlazeClientConfig])
 
-case class Warp10Error(message:String)
+class Warp10Error(message:String) extends Throwable
 
 class Warp10Client(apiEndPoint:Uri, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None){
 
@@ -71,26 +71,25 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
    )
  )
 
- def sendData(datas:Set[Warp10Data]):Future[Warp10Error \/ Response] = {
+ def sendData(datas:Set[Warp10Data]):Task[Response] = {
    val r = requestTemplateForDataIngest.withBody(datas.map(_.warp10Serialize).mkString("\n"))
-   val res = httpClient(r)
-   res.get.map({
-     case -\/(x) => {
-         -\/(Warp10Error(x.getMessage()))
-     }
-     case \/-(x) => {
+   httpClient.fetch(r)(x => {
+
        if(x.status.code == 200){
-         \/-(x)
+         Task.now(x)
        }else{
          // x.bodyAsText.runLog.run
-         -\/(Warp10Error(x.status.toString()))
+         Task.fail(new Warp10Error(x.status.toString))
        }
      }
-   }).start
+   )
+
+
+   //res.attempt.map
  }
 
 
- def sendData(data:Warp10Data):Future[Warp10Error \/ Response] = {
+ def sendData(data:Warp10Data):Task[Response]={//}:Future[Warp10Error \/ Response] = {
    sendData(Set(data))
  }
 
