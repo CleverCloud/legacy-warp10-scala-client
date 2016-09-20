@@ -12,7 +12,7 @@ This client is able to send data to the warp10 DB ATM. It's the main purpose and
 
 Add the dependency to your `build.sbt`:
 
-    "com.clevercloud" %% "warp10-scala-client" % "1.0.1"
+    "com.clevercloud" %% "warp10-scala-client" % "2.0.0"
 
 Add the resolver:
 
