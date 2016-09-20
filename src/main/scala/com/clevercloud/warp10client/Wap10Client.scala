@@ -74,22 +74,17 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
  def sendData(datas:Set[Warp10Data]):Task[Response] = {
    val r = requestTemplateForDataIngest.withBody(datas.map(_.warp10Serialize).mkString("\n"))
    httpClient.fetch(r)(x => {
-
        if(x.status.code == 200){
          Task.now(x)
        }else{
-         // x.bodyAsText.runLog.run
          Task.fail(new Warp10Error(x.status.toString))
        }
      }
    )
-
-
-   //res.attempt.map
  }
 
 
- def sendData(data:Warp10Data):Task[Response]={//}:Future[Warp10Error \/ Response] = {
+ def sendData(data:Warp10Data):Task[Response]={
    sendData(Set(data))
  }
 
