@@ -6,6 +6,8 @@ version := "2.0.1"
 
 scalaVersion := "2.11.7"
 
+crossScalaVersions := Seq("2.11.7", "2.12.1")
+
 libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.8" % Test
 
 lazy val http4sVersion = "0.15.3a"
