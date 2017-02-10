@@ -2,13 +2,13 @@ organization := """com.clevercloud"""
 
 name := """warp10-scala-client"""
 
-version := "2.0.0"
+version := "2.0.1"
 
 scalaVersion := "2.11.7"
 
-libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.4" % "test"
+libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.8" % Test
 
-lazy val http4sVersion = "0.14.1a"
+lazy val http4sVersion = "0.15.3a"
 
 libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-blaze-client" % http4sVersion

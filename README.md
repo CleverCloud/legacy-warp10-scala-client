@@ -2,7 +2,7 @@ master: [![Build Status](https://travis-ci.org/CleverCloud/warp10-scala-client.s
 
 # This is a scala client for [Warp10 Geo/time series DB](http://www.warp10.io/)
 
-It is based on the [http4s](http://http4s.org/) client, and the Pooled HTTP client, keeping TCP connection alive. Configuration of the Client is [here](http://http4s.org/api/0.14/index.html#org.http4s.client.blaze.BlazeClientConfig)
+It is based on the [http4s](http://http4s.org/) client, and the Pooled HTTP client, keeping TCP connection alive. Configuration of the Client is [here](http://http4s.org/v0.15/api/#org.http4s.client.blaze.BlazeClientConfig)
 
 ## Features
 
@@ -12,7 +12,7 @@ This client is able to send data to the warp10 DB ATM. It's the main purpose and
 
 Add the dependency to your `build.sbt`:
 
-    "com.clevercloud" %% "warp10-scala-client" % "2.0.0"
+    "com.clevercloud" %% "warp10-scala-client" % "2.0.1"
 
 Add the resolver:
 
