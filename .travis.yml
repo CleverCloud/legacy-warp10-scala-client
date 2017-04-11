@@ -6,7 +6,6 @@ scala:
    - 2.12.1
    - 2.10.6
    - 2.11.8
-   - 2.9.3
 
 services:
   - docker
