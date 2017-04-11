@@ -15,7 +15,7 @@ services:
   - docker
 
 before_install:
-  - docker pull warp10io/warp10:1.2.5-rc6-ci
+  - docker pull warp10io/warp10:$DOCKERTAG
   - docker run -p 8080:8080 -p 8081:8081 -d -i warp10io/warp10:$DOCKERTAG
   - docker ps -a
 
