@@ -50,7 +50,9 @@ object Warp10Data {
 
 case class PooledHttp1ClientConfiguration(maxTotalConnections:Option[Int], config: Option[BlazeClientConfig])
 
-class Warp10Error(message:String) extends Throwable
+class Warp10Error(message:String) extends Throwable{
+  override def getMessage: String = message
+}
 
 class Warp10Client(apiEndPoint:Uri, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None){
 
