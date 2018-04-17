@@ -1,104 +1,74 @@
 package com.clevercloud.warp10client
-import org.http4s.client.blaze._
-import org.http4s.{Request, Response, Method, Uri, Header, Headers}
-import java.net.URL
-import scalaz.concurrent.{Future, Task}
-import scalaz._
 
+import java.util.UUID
 
-sealed abstract class Warp10Value {
-  def warp10Serialize:String
-}
-case class IntWarp10Value(value: Int) extends Warp10Value{
-  def warp10Serialize = {value.toString()}
-}
-case class LongWarp10Value(value: Long) extends Warp10Value{
-  def warp10Serialize = {value.toString()}
-}
-case class DoubleWarp10Value(value: Double) extends Warp10Value{
-  def warp10Serialize = {value.toString()}
-}
-case class BooleanWarp10Value(value: Boolean) extends Warp10Value{
-  def warp10Serialize = {value.toString()}
-}
-case class StringWarp10Value(value: String) extends Warp10Value{
-  def warp10Serialize = {"'" + value + "'"}
-  /* Do I have to urlEncode? Warp10Data.urlEncode(value) */
-}
+import scala.concurrent.Future
 
-case class Warp10GeoValue(lat:Double, lon:Double, elev:Option[Long]){
-  def warp10Serialize = {
-    lat.toString() + ":" + lon.toString() + elev.fold("/")("/" + _.toString())
+import akka.{Done, NotUsed}
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{Flow, Sink, Source}
+
+import com.clevercloud.warp10client.models._
+import com.clevercloud.warp10client.models.gts_module.GTS
+
+object WarpClient {
+  import WarpClientUtils._
+
+  def apply(host: String, port: Int)(
+    implicit warpConfiguration: WarpConfiguration,
+    actorSystem: ActorSystem,
+    actorMaterializer: ActorMaterializer
+  ): WarpClient = {
+    WarpClient(Http().cachedHostConnectionPool[UUID](host, port))
+  }
+
+  def apply(poolClientFlow: PoolClientFlow)(
+    implicit warpConfiguration: WarpConfiguration,
+    actorMaterializer: ActorMaterializer
+  ): WarpClient = {
+    new WarpClient(WarpClientContext(
+      warpConfiguration,
+      poolClientFlow,
+      actorMaterializer
+    ))
+  }
+  
+  def closePool()(implicit actorSystem: ActorSystem) = {
+    Http().shutdownAllConnectionPools()
   }
 }
 
+class WarpClient(warpContext: WarpClientContext) {
+  import warpContext._
 
-case class Warp10Data(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Warp10Value){
-  def warp10Serialize = {
-    dateTime.toString + "/" + geo.fold("/")(g => g.warp10Serialize) + " " + Warp10Data.urlEncode(name) + "{" + labels.map(kv => Warp10Data.urlEncode(kv._1) + "=" + Warp10Data.urlEncode(kv._2)).mkString(",") + "} " + value.warp10Serialize
+  def fetch(readToken: String): Flow[Query[FetchRange], Seq[GTS], NotUsed] = Fetcher.fetch(readToken)(warpContext)
+  def fetch(readToken: String, query: Query[FetchRange]): Future[Seq[GTS]] = {
+    Source
+      .single(query)
+      .via(fetch(readToken))
+      .runWith(Sink.head)
   }
-}
 
-object Warp10Data {
-  def urlEncode(s:String) = java.net.URLEncoder.encode(s, "utf-8")
-  def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Int):Warp10Data = Warp10Data(dateTime, geo, name, labels, IntWarp10Value(value))
-  def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Long):Warp10Data = Warp10Data(dateTime, geo, name, labels, LongWarp10Value(value))
-  def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Double):Warp10Data = Warp10Data(dateTime, geo, name, labels, DoubleWarp10Value(value))
-  def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:Boolean):Warp10Data = Warp10Data(dateTime, geo, name, labels, BooleanWarp10Value(value))
-  def apply(dateTime:Long, geo:Option[Warp10GeoValue], name:String, labels:Set[(String, String)], value:String):Warp10Data = Warp10Data(dateTime, geo, name, labels, StringWarp10Value(value))
-}
+  def rangedFetch(readToken: String, query: Query[StartStopRangeMicros], batchSize: Int, limit: Int): Future[Seq[GTS]] = {
+    Source
+      .single(query)
+      .via(Fetcher.rangedFetch(readToken, query, batchSize, limit)(warpContext))
+      .runWith(Sink.head)
+  }
 
-case class PooledHttp1ClientConfiguration(maxTotalConnections:Option[Int], config: Option[BlazeClientConfig])
-
-class Warp10Error(message:String) extends Throwable{
-  override def getMessage: String = message
-}
-
-class Warp10Client(apiEndPoint:Uri, token:String, pooledHttp1ClientConfiguration:Option[PooledHttp1ClientConfiguration] = None){
-
-val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
-
- val httpClient = PooledHttp1Client(
-   maxTotalConnections = pooledHttp1ClientConfiguration.fold(defaultMaxTotalConnections4pooledHttp1ClientConfiguration)(_.maxTotalConnections.getOrElse(defaultMaxTotalConnections4pooledHttp1ClientConfiguration)),
-   config = pooledHttp1ClientConfiguration.fold(BlazeClientConfig.defaultConfig)(_.config.getOrElse(BlazeClientConfig.defaultConfig))
- )
-
- val requestTemplateForDataIngest = Request(
-   method = Method.POST,
-   uri = apiEndPoint / "api/v0/update",
-   headers = Headers(
-     Header("Host", apiEndPoint.host.fold("localhost")(_.renderString)),
-     Header("X-Warp10-Token", token),
-     Header("Content-Type", "test/plain")
-   )
- )
-
- def sendData(datas:Set[Warp10Data]):Task[Response] = {
-   val r = requestTemplateForDataIngest.withBody(datas.map(_.warp10Serialize).mkString("\n"))
-   httpClient.fetch(r)(x => {
-       if(x.status.code == 200){
-         Task.now(x)
-       }else{
-         Task.fail(new Warp10Error(x.status.toString))
-       }
-     }
-   )
- }
-
-
- def sendData(data:Warp10Data):Task[Response]={
-   sendData(Set(data))
- }
-
-
- def closeNow = {
-   httpClient.shutdownNow()
- }
-
-
-}
-
-object Warp10Client {
-
-
+  def push(writeToken: String): Flow[GTS, Unit, NotUsed] = Pusher.push(writeToken)(warpContext)
+  def push(gts: GTS, writeToken: String): Future[Done] = {
+    Source
+      .single(gts)
+      .via(push(writeToken))
+      .runForeach(_ => ())
+  }
+  def push(gtsSeq: Seq[GTS], writeToken: String, batchSize: Int = 100): Future[Done] = {
+    Source
+      .fromIterator(() => gtsSeq.grouped(batchSize))
+      .via(Pusher.pushSeq(writeToken)(warpContext))
+      .runForeach(_ => ())
+  }
 }
