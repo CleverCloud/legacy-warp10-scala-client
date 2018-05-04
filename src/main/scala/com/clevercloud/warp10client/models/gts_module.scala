@@ -206,6 +206,25 @@ object gts_module {
         Left(InvalidGTSValueFormat)
       }
     }
+
+    def parseJson(string: String): GTSValue = {
+      def isTrueValue = string == "true"
+      def isFalseValue = string == "false"
+      def isLongValue = string.matches("(\\+|-)?\\d+")
+      def isDoubleValue = string.matches("(\\+|-)?\\d+(\\.\\d*)?")
+
+      if (isTrueValue) {
+        GTSValue(true)
+      } else if (isFalseValue) {
+        GTSValue(false)
+      } else if (isLongValue) {
+        GTSValue(string.toLong)
+      } else if (isDoubleValue) {
+        GTSValue(string.toDouble)
+      } else {
+        GTSValue(string)
+      }
+    }
   }
 
   sealed trait InvalidGTSFormat
