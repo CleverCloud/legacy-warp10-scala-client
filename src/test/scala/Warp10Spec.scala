@@ -35,6 +35,8 @@ class Warp10ClientSpec extends Specification with matcher.DisjunctionMatchers {
 
       Seq[GTS] -> on ranged fetch to retrieve 3000GTS                 $f3
       Seq[GTS] -> on ranged fetch to retrieve 123GTS                  $f4
+
+      WarpScript fetch -> results                                     $e1
   """
 
   val zonedNow = ZonedDateTime.now
@@ -127,25 +129,40 @@ class Warp10ClientSpec extends Specification with matcher.DisjunctionMatchers {
 
 
   // PUSH 10 000 GTS to real Warp10
-  val warpRangedFetchClient = WarpClient("localhost", 8080)
+  val warpRealClient = WarpClient("localhost", 8080)
 
   val realSeqRangedFetch: Seq[GTS] = (1 to 3000) map { i =>
     GTS(Some(utcNowStartMicro - (i * 1L)), None, None, "rangedFetchTest", Map(".app" -> "test"), new GTSStringValue(s"J$i"))
   }
 
-  val validHugePush_p = warpRangedFetchClient.push(realSeqRangedFetch, writeToken)
+  val validHugePush_p = warpRealClient.push(realSeqRangedFetch, writeToken)
   def p5 = Await.result(validHugePush_p, Period(100000, MILLISECONDS)) must be_==(Done)
 
   // RANGED FETCH TEST
   // 10 000GTS
   Thread.sleep(5000) // wait to warp to manage pushed data
   val query = Query(Selector("rangedFetchTest"), FetchRange(utcNowStartMicro, utcNowStartMicro - (300 * 10L)))
-  val validHugeRangedFetch_f = warpRangedFetchClient.rangedFetch(readToken, query, batchSize = 400, limit = 3000)
+  val validHugeRangedFetch_f = warpRealClient.rangedFetch(readToken, query, batchSize = 400, limit = 3000)
   val f3 = Await.result(validHugeRangedFetch_f, Period(10000, MILLISECONDS)) must have size(3000)
 
   // 1 234GTS
-  val validLittleRangedFetch_f = warpRangedFetchClient.rangedFetch(readToken, query, batchSize = 20, limit = 123)
+  val validLittleRangedFetch_f = warpRealClient.rangedFetch(readToken, query, batchSize = 20, limit = 123)
   val f4 = Await.result(validLittleRangedFetch_f, Period(5000, MILLISECONDS)) must have size(123)
+
+
+  // WARPSCRIPT TEST
+  val script = s"""
+    [
+      '$readToken'
+      '~.*'
+      { }
+      $utcNowStartMicro -1
+    ]
+    FETCH
+  """
+
+  val testScript1 = warpRealClient.exec(script)
+  val e1 = Await.result(testScript1, Period(5000, MILLISECONDS)) must have size(be_>=(1))
 
   // close http pool
   WarpClient.closePool()
