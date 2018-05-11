@@ -2,7 +2,6 @@ package com.clevercloud.warp10client
 
 import java.util.UUID
 
-import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -29,26 +28,9 @@ object WarpClientUtils {
       .map(_.decodeString("UTF-8"))
   }
 
-  def getLines: Flow[ByteString, String, NotUsed] = {
+  def decode: Flow[ByteString, String, NotUsed] = {
     Flow[ByteString]
       .map(_.decodeString("UTF-8"))
-      .intersperse("", "", "\n")
-      .scan("") { 
-        case (seq, item) => {
-          if (seq.endsWith("\n")) {
-            item
-          } else if (seq.contains("\n")) {
-            seq.substring(seq.lastIndexOf("\n") + 1) + item
-          } else {
-            seq + item
-          }
-        }
-      }
-      .filter(_.contains("\n")) // mandatory because of gts serialization style
-      .map(segment => segment.substring(0, segment.lastIndexOf("\n")))
-      .mapConcat(_.split("\n").to[immutable.Iterable])
-      .map(line => if (line.startsWith("\r")) line.drop(1) else line)
-      .map(line => if (line.endsWith("\r")) line.dropRight(1) else line)
   }
 }
 

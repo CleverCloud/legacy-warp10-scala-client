@@ -24,10 +24,7 @@ object Fetcher {
       .filter({ case (_, key) => key == uuid })
       .map({ case (responseTry, _) => responseTry })
       .via(processResponseTry)
-      .via(byteStringToGTS)
-      .fold(Seq[GTS]()) {
-        case (seq, item) => seq :+ item
-      }
+      .via(byteStringToGTSSeq)
   }
 
   def rangedFetch(
@@ -48,18 +45,17 @@ object Fetcher {
       .filter({ case (_, key) => key == uuid })
       .map({ case (responseTry, _) => responseTry })
       .via(processResponseTry)
-      .via(byteStringToGTS)
-      .filter(_.ts.get >= query.range.oldestDate)
-      .fold(Seq[GTS]()) { case (seq, item) => { seq :+ item }}
+      .via(byteStringToGTSSeq)
+      .map { gtsSeq => gtsSeq.map { _.filter(maxDate = query.range.oldestDate) }} // remove exceeded gtsPoint
       .flatMapConcat { gtsSeq: Seq[GTS] =>
-        val newSize = size + gtsSeq.size
+        val newSize = size + gtsSeq.map { gts: GTS => gts.points.size }.sum
         if (gtsSeq.isEmpty) {
           Source.single(gtsSeq)
         } else {
-          val currentOldestGTS = gtsSeq.last
-          val chainedNow = currentOldestGTS.ts.get - 1
-          if (chainedNow > query.range.oldestDate && newSize <= limit) {
-            val newQuery = query.copy(range = StartStopRangeMicros(chainedNow, query.range.oldestDate))
+          val currentOldestGTSPoint = gtsSeq.maxBy(_.oldestDate)
+          val newNow = currentOldestGTSPoint.points.max.ts.get - 1
+          if (newNow > query.range.oldestDate && newSize <= limit) {
+            val newQuery = query.copy(range = StartStopRangeMicros(newNow, query.range.oldestDate))
             Source
               .single(newQuery)
               .via(rangedFetch(readToken, newQuery, batchSize, limit, newSize))
@@ -110,11 +106,10 @@ object Fetcher {
       }
   }
 
-  def byteStringToGTS: Flow[ByteString, GTS, NotUsed] = {
+  def byteStringToGTSSeq: Flow[ByteString, Seq[GTS], NotUsed] = {
     Flow[ByteString]
-      .via(WarpClientUtils.getLines)
+      .via(WarpClientUtils.decode)
       .map(GTS.parse)
-      .filter(_.isRight)
       .map(_.right.get)
   }
 }

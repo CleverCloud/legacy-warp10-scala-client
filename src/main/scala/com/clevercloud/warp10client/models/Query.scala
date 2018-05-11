@@ -9,7 +9,7 @@ case class Query[+A <: FetchRange](
   range: A,
   dedup: Boolean = false
 ) {
-  def serialize = s"selector=${selector.serialize}&format=fulltext&dedup=$dedup&${range.serialize}"
+  def serialize = s"selector=${selector.serialize}&format=text&dedup=$dedup&${range.serialize}"
 }
 
 trait Serializable {
