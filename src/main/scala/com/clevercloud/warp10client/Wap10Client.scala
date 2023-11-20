@@ -67,7 +67,6 @@ val defaultMaxTotalConnections4pooledHttp1ClientConfiguration = 10
    method = Method.POST,
    uri = apiEndPoint / "api/v0/update",
    headers = Headers(
-     Header("Host", apiEndPoint.host.fold("localhost")(_.renderString)),
      Header("X-Warp10-Token", token),
      Header("Content-Type", "test/plain")
    )
