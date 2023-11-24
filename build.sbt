@@ -6,7 +6,7 @@ settings(
             organization := "com.clevercloud",
             scalaVersion := "2.11.7",
             crossScalaVersions := Seq("2.11.7", "2.12.1"),
-            version := "2.0.2",
+            version := "2.0.3",
             )),
       name := "warp10-scala-client",
       homepage := Some(url("https://github.com/CleverCloud/warp10-scala-client")),
